@@ -1,0 +1,24 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python Debugger: Debug run_model.py",
+        "type": "python",
+        "request": "launch",
+        "module": "run_model",
+        "console": "integratedTerminal",
+        "justMyCode": false,
+        "args": [
+          "--mode=train",
+          "--dataset_name=simulator",
+          "--trajectory=1",
+          "--loss_model=orig",
+          "--steps=56k"
+        ],
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}"
+        }
+      }
+    ]
+  }
+  

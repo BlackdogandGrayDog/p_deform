@@ -1,0 +1,45 @@
+import subprocess
+import signal
+
+# Define the mode
+mode = "base" # base or finetune
+
+
+# Define training parameter combinations
+trajectories = ['11' if mode == "base" else '12']
+loss_models = ['patched_0.005_0.01']
+steps = ['400k' if mode == "base" else '700k']
+
+dataset_name = "hamlyn"
+finetune_dataset_name = dataset_name
+finetune_trajectory = "11" if mode == "base" else "12"
+
+# Iterate over all parameter combinations
+for trajectory in trajectories:
+    for loss_model in loss_models:
+        for step in steps:
+            print(f"\n>>> Running TRAIN with: Trajectory={trajectory}, Loss={loss_model}, Steps={step} <<<\n")
+
+            if finetune_dataset_name is not None:
+                print(f">>> Finetune with: Dataset={finetune_dataset_name}, Trajectory={finetune_trajectory} <<<\n")
+
+            # Construct training command
+            command = [
+                "python", "./run_model.py",
+                "--mode", "train",
+                "--dataset_name", dataset_name,
+                "--trajectory", trajectory,
+                "--finetune_dataset_name", dataset_name,
+                "--finetune_trajectory", finetune_trajectory,
+                "--loss_model", loss_model,
+                "--steps", step
+            ]
+
+            # Run training script
+            try:
+                process = subprocess.Popen(command)
+                process.wait()
+            except KeyboardInterrupt:
+                print("\n⚠️ Training interrupted! Attempting graceful shutdown...")
+                process.send_signal(signal.SIGINT)
+                process.wait()
