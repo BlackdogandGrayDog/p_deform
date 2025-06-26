@@ -142,7 +142,7 @@ def learner(model):
         if args.finetune_dataset_name is not None:
             train_ds = dataset.load_datasets(f'./input/{args.finetune_dataset_name}/')
         else:
-            train_ds = dataset.load_datasets(f'./input/{args.dataset_name}/trajectory_{args.trajectory}_accel_patched_input/')
+            train_ds = dataset.load_datasets(f'./input/{args.dataset_name}/')
             
         train_ds = train_ds.flat_map(tf.data.Dataset.from_tensor_slices).shuffle(10000).repeat(None)
         train_inputs = tf.data.make_one_shot_iterator(train_ds).get_next()

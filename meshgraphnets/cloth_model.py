@@ -46,37 +46,18 @@ class Model(snt.AbstractModule):
             )
         else:
             # Patched Node Normalizer (for any 'patched_xxx' variant)
-            if (self.dataset_name.startswith('cloth') and (self.trajectory == 'clothblow' or self.trajectory == 'clothblow_test')):
-              self._node_normalizer = normalization.Normalizer(
-                  size=3 + 3 + common.NodeType.SIZE, name='node_normalizer'
-              )
-            else:
-             # Patched Node Normalizer (for any 'patched_xxx' variant)
-              self._node_normalizer = normalization.Normalizer(
-                  size=3 + 3 + 2 + common.NodeType.SIZE + common.NodeType.PATCH_SIZE ** 2 * 2,
-                  name='node_normalizer'
-              )
-              # self._node_normalizer = normalization.Normalizer(
-              #    size=3 + 3 + 2 + common.NodeType.SIZE + common.NodeType.PATCH_SIZE ** 2 * 2 - 3, name='node_normalizer'
-              # )
-              
+            self._node_normalizer = normalization.Normalizer(
+                size=3 + 3 + 2 + common.NodeType.SIZE + common.NodeType.PATCH_SIZE ** 2 * 2,
+                name='node_normalizer'
+            )
+            
         if self.loss_model.startswith('orig'):
             self._edge_normalizer = normalization.Normalizer(
                 size=7, name='edge_normalizer')
         else:
-          if (self.dataset_name.startswith('cloth') and (self.trajectory == 'clothblow' or self.trajectory == 'clothblow_test')):
-            self._edge_normalizer = normalization.Normalizer(
-                size=17, name='edge_normalizer'  # 2D coord + 3D coord + 2*length = 7
-            )
-
-          else:
             self._edge_normalizer = normalization.Normalizer(
                 size=3 + 1 + 2 + 1 + 2 + 1 + 3 + 1 + 3 + 1 + 1 + 1 + 2 + 1, name='edge_normalizer'  # 2D coord + 3D coord + 2*length = 7
             )
-            #  self._edge_normalizer = normalization.Normalizer(
-            #     size=3 + 1 + 2 + 1 + 2 + 1 + 3 + 1 + 3 + 1 + 1 + 1 + 2 + 1 - 10, name='edge_normalizer'  # 2D coord + 3D coord + 2*length = 7
-            # )
-  
   
   #  With Path and Acceleration Input and Edge Features
   def _build_graph(self, inputs, is_training):
@@ -97,11 +78,8 @@ class Model(snt.AbstractModule):
     node_type = tf.one_hot(inputs['node_type'][:, 0], common.NodeType.SIZE)
     
     # Concatenate all node features
-    if (self.dataset_name.startswith('cloth') and (self.trajectory == 'clothblow' or self.trajectory == 'clothblow_test')):
-      node_features = tf.concat([velocity, acceleration, node_type], axis=-1)
-    else:
-      # node_features = tf.concat([velocity, acceleration, flow_2d, patched_flow, node_type], axis=-1)
-      node_features = tf.concat([velocity, acceleration, flow_2d, patched_flow, node_type], axis=-1)
+    node_features = tf.concat([velocity, acceleration, flow_2d, patched_flow, node_type], axis=-1)
+    
     # construct graph edges
     senders, receivers = common.triangles_to_edges(inputs['cells'])
 
@@ -122,53 +100,29 @@ class Model(snt.AbstractModule):
     velocity_projection = tf.reduce_sum(relative_velocity * unit_edge_dir, axis=-1, keepdims=True)
     acceleration_projection = tf.reduce_sum(relative_acceleration * unit_edge_dir, axis=-1, keepdims=True)
     
-    if (self.dataset_name.startswith('cloth') and (self.trajectory == 'clothblow' or self.trajectory == 'clothblow_test')):
-      edge_features = tf.concat([
-          relative_world_pos,
-          tf.norm(relative_world_pos, axis=-1, keepdims=True),
+    # Edge Features
+    edge_features = tf.concat([
+      relative_world_pos,
+      tf.norm(relative_world_pos, axis=-1, keepdims=True),
 
-        relative_mesh_pos,
-        tf.norm(relative_mesh_pos, axis=-1, keepdims=True),
+      relative_mesh_pos,
+      tf.norm(relative_mesh_pos, axis=-1, keepdims=True),
 
-        # relative_image_pos,
-        # tf.norm(relative_image_pos, axis=-1, keepdims=True),
+      relative_image_pos,
+      tf.norm(relative_image_pos, axis=-1, keepdims=True),
 
-        relative_velocity,
-        tf.norm(relative_velocity, axis=-1, keepdims=True),
+      relative_velocity,
+      tf.norm(relative_velocity, axis=-1, keepdims=True),
 
-        relative_acceleration,
-        tf.norm(relative_acceleration, axis=-1, keepdims=True),
-        
-        # flow_diff,
-        # tf.norm(flow_diff, axis=-1, keepdims=True),
-
-        velocity_projection,
-        acceleration_projection
-      ], axis=-1)
+      relative_acceleration,
+      tf.norm(relative_acceleration, axis=-1, keepdims=True),
       
-    else:
-      edge_features = tf.concat([
-        relative_world_pos,
-        tf.norm(relative_world_pos, axis=-1, keepdims=True),
+      flow_diff,
+      tf.norm(flow_diff, axis=-1, keepdims=True),
 
-        relative_mesh_pos,
-        tf.norm(relative_mesh_pos, axis=-1, keepdims=True),
-
-        relative_image_pos,
-        tf.norm(relative_image_pos, axis=-1, keepdims=True),
-
-        relative_velocity,
-        tf.norm(relative_velocity, axis=-1, keepdims=True),
-
-        relative_acceleration,
-        tf.norm(relative_acceleration, axis=-1, keepdims=True),
-        
-        flow_diff,
-        tf.norm(flow_diff, axis=-1, keepdims=True),
-
-        velocity_projection,
-        acceleration_projection
-      ], axis=-1)
+      velocity_projection,
+      acceleration_projection
+    ], axis=-1)
 
     mesh_edges = core_model.EdgeSet(
         name='mesh_edges',
@@ -286,16 +240,8 @@ class Model(snt.AbstractModule):
       pred_position_homo = tf.concat([pred_position, tf.ones_like(pred_position[:, :1])], axis=-1)
 
       # Project to 2D using camera matrix
-      if "hamlyn" in (self.dataset_name or "") or "hamlyn" in (self.finetune_dataset_name or ""):
-        if str(self.finetune_traj_num).startswith("11") or str(self.finetune_traj_num).startswith("12"):
-          image_pos_pred = tf.matmul(common.K_hamlyn_11, tf.transpose(pred_position_homo[:, :3], perm=[1, 0]))
-        else:
-          image_pos_pred = tf.matmul(common.K_hamlyn_4, tf.transpose(pred_position_homo[:, :3], perm=[1, 0]))
-        img_size = common.hamlyn_img_size
-      else:
-        image_pos_pred = tf.matmul(common.K_simulator, tf.transpose(pred_position_homo[:, :3], perm=[1, 0]))
-        img_size = common.simulator_img_size
-        # print_k = tf.print("K_simulator:\n", common.K_simulator)
+      image_pos_pred = tf.matmul(common.K_simulator, tf.transpose(pred_position_homo[:, :3], perm=[1, 0]))
+      img_size = common.simulator_img_size
         
       image_pos_pred = tf.transpose(image_pos_pred, perm=[1, 0])
       image_pos_pred = image_pos_pred[:, :2] / image_pos_pred[:, 2:3]

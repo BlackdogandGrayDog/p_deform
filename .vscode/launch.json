@@ -11,8 +11,8 @@
         "args": [
           "--mode=train",
           "--dataset_name=simulator",
-          "--trajectory=1",
-          "--loss_model=orig",
+          "--trajectory=0",
+          "--loss_model=patched_0.005_0.01",
           "--steps=56k"
         ],
         "env": {
