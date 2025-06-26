@@ -1,0 +1,4 @@
+dm-sonnet<2
+matplotlib
+absl-py
+numpy
