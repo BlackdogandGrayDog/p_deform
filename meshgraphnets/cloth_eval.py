@@ -24,17 +24,13 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # 0 = all logs, 1 = filter INFO, 2 = filter WARNING, 3 = filter ERROR
 
 # Project 3D world positions to 2D image space using intrinsic matrix
-def project_to_image_space(world_pos, dataset_name, traj_num):
+def project_to_image_space(world_pos):
     # Homogeneous coordinates
     pos_homo = tf.concat([world_pos, tf.ones_like(world_pos[:, :1])], axis=-1)
+
     # Select intrinsic matrix
-    if "hamlyn" in dataset_name:
-        if str(traj_num).startswith("11") or str(traj_num).startswith("12"):
-            K = common.K_hamlyn_11
-        else:
-            K = common.K_hamlyn_4
-    else:
-        K = common.K_simulator
+    K = common.K_simulator
+
     # Project to image space
     image_pos = tf.matmul(K, tf.transpose(pos_homo[:, :3], perm=[1, 0]))
     image_pos = tf.transpose(image_pos, perm=[1, 0])
@@ -98,7 +94,7 @@ def extract_patch_flow(flow_map, uv_coords, patch_size):
 
 
 
-def _rollout(model, initial_state, num_steps, eval_dataset_name, eval_traj_num, flow_npz_path, patched_flow_seq):
+def _rollout(model, initial_state, num_steps, flow_npz_path, patched_flow_seq):
   """Rolls out a model trajectory."""
   # Determine which nodes are dynamic
   mask = tf.equal(initial_state['node_type'][:, 0], NodeType.NORMAL)
@@ -128,7 +124,7 @@ def _rollout(model, initial_state, num_steps, eval_dataset_name, eval_traj_num, 
     next_pos = tf.where(mask, prediction, cur_pos)
 
     # === NEW: Project predicted next_pos to image space
-    next_img_pos = project_to_image_space(next_pos, eval_dataset_name, eval_traj_num)
+    next_img_pos = project_to_image_space(next_pos)
 
     # Save current position into trajectory
     trajectory = trajectory.write(step, cur_pos)
@@ -160,7 +156,7 @@ def evaluate(model, inputs, eval_dataset_name, eval_traj_num, flow_npz_path):
   """Performs model rollouts and create stats."""
   initial_state = {k: v[0] for k, v in inputs.items()}
   num_steps = inputs['cells'].shape[0]
-  prediction = _rollout(model, initial_state, num_steps, eval_dataset_name, eval_traj_num, flow_npz_path, inputs['patched_flow'])
+  prediction = _rollout(model, initial_state, num_steps, flow_npz_path, inputs['patched_flow'])
 
   error = tf.reduce_mean((prediction - inputs['world_pos'])**2, axis=-1)
   scalars = {'mse_%d_steps' % horizon: tf.reduce_mean(error[1:horizon+1])
