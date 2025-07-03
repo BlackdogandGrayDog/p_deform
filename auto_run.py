@@ -6,13 +6,13 @@ mode = "base" # base or finetune
 
 
 # Define training parameter combinations
-trajectories = ['1']
+trajectories = ['3']
 loss_models = ['patched_0.005_0.01']
 steps = ['900k']
 
 dataset_name = "simulator"
 finetune_dataset_name = dataset_name
-finetune_trajectory = "1"
+finetune_trajectory = "3"
 
 # Iterate over all parameter combinations
 for trajectory in trajectories:
