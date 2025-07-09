@@ -21,11 +21,18 @@ import numpy as np
 
 import numpy as np
 
+# # Simulator Intrinsic Camera Matrix
+# K_simulator = np.array([
+#     [248.0145, 0,       256],
+#     [0,        330.5661, 256],
+#     [0,        0,          1]
+# ], dtype=np.float32)
+
 # Simulator Intrinsic Camera Matrix
 K_simulator = np.array([
-    [248.0145, 0,       256],
-    [0,        330.5661, 256],
-    [0,        0,          1]
+    [248.12, 0,       256],
+    [0,      248.12,  192],
+    [0,      0,         1]
 ], dtype=np.float32)
 
 
