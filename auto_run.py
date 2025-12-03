@@ -4,7 +4,7 @@ import signal
 # Define training parameter combinations
 trajectories = ['2']
 loss_models = ['patched_0.005_0.01']
-steps = ['900k']
+steps = ['2000k']
 
 dataset_name = "simulator"
 finetune_dataset_name = dataset_name

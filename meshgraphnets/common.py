@@ -75,7 +75,7 @@ K_surgt_1 = np.array([
 
 
 
-simulator_img_size = np.array([512, 512], dtype=np.float32)
+simulator_img_size = np.array([512, 384], dtype=np.float32)
 hamlyn_img_size = np.array([360, 288], dtype=np.float32)
 clothblow_img_size = np.array([640, 512], dtype=np.float32)
 surgt_img_size = np.array([1280, 1024], dtype=np.float32)
