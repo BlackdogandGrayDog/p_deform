@@ -2,13 +2,13 @@ import subprocess
 import signal
 
 # Define training parameter combinations
-trajectories = ['2']
+trajectories = ['3']
 loss_models = ['patched_0.005_0.01']
 steps = ['2000k']
 
 dataset_name = "simulator"
 finetune_dataset_name = dataset_name
-finetune_trajectory = "2"
+finetune_trajectory = "3"
 
 # Iterate over all parameter combinations
 for trajectory in trajectories:

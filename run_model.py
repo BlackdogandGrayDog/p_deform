@@ -156,9 +156,9 @@ def learner(model):
             print('Using patched loss function')
         
         global_step = tf.train.create_global_step()
-        lr = tf.train.exponential_decay(learning_rate=1e-4,
+        lr = tf.train.exponential_decay(learning_rate=1e-3,
                                         global_step=global_step,
-                                        decay_steps=int(5e6),
+                                        decay_steps=int(5e7),
                                         decay_rate=0.1) + 1e-6
         optimizer = tf.train.AdamOptimizer(learning_rate=lr)
         train_op = optimizer.minimize(loss_op, global_step=global_step)
